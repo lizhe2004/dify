@@ -43,7 +43,7 @@ gtag('config', 'AW-11217955271"');
           <Forms />
           <div className='px-8 py-6 text-sm font-normal text-gray-500'>
             © {new Date().getFullYear()} 小兔科技.
-           备案号：沪ICP备15005541号
+           备案号：沪ICP备15005541号-2
           </div>
         </div>
 
