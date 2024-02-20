@@ -1,6 +1,4 @@
-# -*- coding:utf-8 -*-
 from datetime import datetime
-from typing import List
 
 from flask import request
 from flask_login import current_user
@@ -71,7 +69,7 @@ class DocumentResource(Resource):
 
         return document
 
-    def get_batch_documents(self, dataset_id: str, batch: str) -> List[Document]:
+    def get_batch_documents(self, dataset_id: str, batch: str) -> list[Document]:
         dataset = DatasetService.get_dataset(dataset_id)
         if not dataset:
             raise NotFound('Dataset not found.')
@@ -296,8 +294,8 @@ class DatasetInitApi(Resource):
                 )
             except InvokeAuthorizationError:
                 raise ProviderNotInitializeError(
-                    f"No Embedding Model available. Please configure a valid provider "
-                    f"in the Settings -> Model Provider.")
+                    "No Embedding Model available. Please configure a valid provider "
+                    "in the Settings -> Model Provider.")
             except ProviderTokenNotInitError as ex:
                 raise ProviderNotInitializeError(ex.description)
 
@@ -372,8 +370,8 @@ class DocumentIndexingEstimateApi(DocumentResource):
                                                                       'English', dataset_id)
                 except LLMBadRequestError:
                     raise ProviderNotInitializeError(
-                        f"No Embedding Model available. Please configure a valid provider "
-                        f"in the Settings -> Model Provider.")
+                        "No Embedding Model available. Please configure a valid provider "
+                        "in the Settings -> Model Provider.")
                 except ProviderTokenNotInitError as ex:
                     raise ProviderNotInitializeError(ex.description)
 
@@ -442,8 +440,8 @@ class DocumentBatchIndexingEstimateApi(DocumentResource):
                                                                   'English', dataset_id)
             except LLMBadRequestError:
                 raise ProviderNotInitializeError(
-                    f"No Embedding Model available. Please configure a valid provider "
-                    f"in the Settings -> Model Provider.")
+                    "No Embedding Model available. Please configure a valid provider "
+                    "in the Settings -> Model Provider.")
             except ProviderTokenNotInitError as ex:
                 raise ProviderNotInitializeError(ex.description)
         elif dataset.data_source_type == 'notion_import':
@@ -456,8 +454,8 @@ class DocumentBatchIndexingEstimateApi(DocumentResource):
                                                                     None, 'English', dataset_id)
             except LLMBadRequestError:
                 raise ProviderNotInitializeError(
-                    f"No Embedding Model available. Please configure a valid provider "
-                    f"in the Settings -> Model Provider.")
+                    "No Embedding Model available. Please configure a valid provider "
+                    "in the Settings -> Model Provider.")
             except ProviderTokenNotInitError as ex:
                 raise ProviderNotInitializeError(ex.description)
         else:

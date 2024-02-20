@@ -4,7 +4,7 @@ import logging
 import random
 import time
 import uuid
-from typing import List, Optional, cast
+from typing import Optional, cast
 
 from flask import current_app
 from flask_login import current_user
@@ -139,8 +139,8 @@ class DatasetService:
                 )
             except LLMBadRequestError:
                 raise ValueError(
-                    f"No Embedding Model available. Please configure a valid provider "
-                    f"in the Settings -> Model Provider.")
+                    "No Embedding Model available. Please configure a valid provider "
+                    "in the Settings -> Model Provider.")
             except ProviderTokenNotInitError as ex:
                 raise ValueError(f"The dataset in unavailable, due to: "
                                  f"{ex.description}")
@@ -176,8 +176,8 @@ class DatasetService:
                     filtered_data['collection_binding_id'] = dataset_collection_binding.id
                 except LLMBadRequestError:
                     raise ValueError(
-                        f"No Embedding Model available. Please configure a valid provider "
-                        f"in the Settings -> Model Provider.")
+                        "No Embedding Model available. Please configure a valid provider "
+                        "in the Settings -> Model Provider.")
                 except ProviderTokenNotInitError as ex:
                     raise ValueError(ex.description)
 
@@ -366,7 +366,7 @@ class DocumentService:
         return document
 
     @staticmethod
-    def get_document_by_dataset_id(dataset_id: str) -> List[Document]:
+    def get_document_by_dataset_id(dataset_id: str) -> list[Document]:
         documents = db.session.query(Document).filter(
             Document.dataset_id == dataset_id,
             Document.enabled == True
@@ -375,7 +375,7 @@ class DocumentService:
         return documents
 
     @staticmethod
-    def get_batch_documents(dataset_id: str, batch: str) -> List[Document]:
+    def get_batch_documents(dataset_id: str, batch: str) -> list[Document]:
         documents = db.session.query(Document).filter(
             Document.batch == batch,
             Document.dataset_id == dataset_id,

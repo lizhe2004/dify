@@ -14,7 +14,6 @@ import type {
   PromptVariable,
   VisionFile,
 } from '../types'
-import { useChatContext } from './context'
 import { TransferMethod } from '@/types/app'
 import { useToastContext } from '@/app/components/base/toast'
 import { ssePost } from '@/service/base'
@@ -43,7 +42,7 @@ export const useCheckPromptVariables = () => {
     } = promptVariablesConfig
     let hasEmptyInput = ''
     const requiredVars = promptVariables.filter(({ key, name, required, type }) => {
-      if (type === 'api')
+      if (type !== 'string' && type !== 'paragraph' && type !== 'select')
         return false
       const res = (!key || !key.trim()) || (!name || !name.trim()) || (required || required === undefined || required === null)
       return res
@@ -101,7 +100,7 @@ export const useChat = (
   const handleUpdateChatList = useCallback((newChatList: ChatItem[]) => {
     setChatList(newChatList)
     chatListRef.current = newChatList
-  }, [setChatList])
+  }, [])
   const handleResponsing = useCallback((isResponsing: boolean) => {
     setIsResponsing(isResponsing)
     isResponsingRef.current = isResponsing
@@ -111,19 +110,29 @@ export const useChat = (
     return replaceStringWithValues(str, promptVariablesConfig?.promptVariables || [], promptVariablesConfig?.inputs || {})
   }, [promptVariablesConfig?.inputs, promptVariablesConfig?.promptVariables])
   useEffect(() => {
-    if (config?.opening_statement && chatListRef.current.filter(item => item.isOpeningStatement).length === 0) {
-      handleUpdateChatList([
-        {
-          id: `${Date.now()}`,
-          content: getIntroduction(config.opening_statement),
-          isAnswer: true,
-          isOpeningStatement: true,
-          suggestedQuestions: config.suggested_questions,
-        },
-        ...chatListRef.current,
-      ])
+    if (config?.opening_statement) {
+      handleUpdateChatList(produce(chatListRef.current, (draft) => {
+        const index = draft.findIndex(item => item.isOpeningStatement)
+
+        if (index > -1) {
+          draft[index] = {
+            ...draft[index],
+            content: getIntroduction(config.opening_statement),
+            suggestedQuestions: config.suggested_questions,
+          }
+        }
+        else {
+          draft.unshift({
+            id: `${Date.now()}`,
+            content: getIntroduction(config.opening_statement),
+            isAnswer: true,
+            isOpeningStatement: true,
+            suggestedQuestions: config.suggested_questions,
+          })
+        }
+      }))
     }
-  }, [])
+  }, [config?.opening_statement, getIntroduction, config?.suggested_questions, handleUpdateChatList])
 
   const handleStop = useCallback(() => {
     hasStopResponded.current = true
@@ -137,8 +146,9 @@ export const useChat = (
   }, [stopChat, handleResponsing])
 
   const handleRestart = useCallback(() => {
-    handleStop()
     connversationId.current = ''
+    taskIdRef.current = ''
+    handleStop()
     const newChatList = config?.opening_statement
       ? [{
         id: `${Date.now()}`,
@@ -506,15 +516,4 @@ export const useChat = (
     handleAnnotationAdded,
     handleAnnotationRemoved,
   }
-}
-
-export const useCurrentAnswerIsResponsing = (answerId: string) => {
-  const {
-    isResponsing,
-    chatList,
-  } = useChatContext()
-
-  const isLast = answerId === chatList[chatList.length - 1]?.id
-
-  return isLast && isResponsing
 }
