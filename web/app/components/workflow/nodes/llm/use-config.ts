@@ -8,6 +8,7 @@ import {
   useIsChatMode,
   useNodesReadOnly,
 } from '../../hooks'
+import useAvailableVarList from '../_base/hooks/use-available-var-list'
 import type { LLMNodeType } from './types'
 import { Resolution } from '@/types/app'
 import { useModelListAndDefaultModelAndCurrentProviderAndModel, useTextGenerationCurrentProviderAndModelAndModelList } from '@/app/components/header/account-setting/model-provider-page/hooks'
@@ -103,6 +104,7 @@ const useConfig = (id: string, payload: LLMNodeType) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultConfig, isChatModel])
 
+  const [modelChanged, setModelChanged] = useState(false)
   const {
     currentProvider,
     currentModel,
@@ -118,6 +120,7 @@ const useConfig = (id: string, payload: LLMNodeType) => {
         appendDefaultPromptConfig(draft, defaultConfig, model.mode === 'chat')
     })
     setInputs(newInputs)
+    setModelChanged(true)
   }, [setInputs, defaultConfig, appendDefaultPromptConfig])
 
   useEffect(() => {
@@ -146,7 +149,35 @@ const useConfig = (id: string, payload: LLMNodeType) => {
     },
   )
   const isShowVisionConfig = !!currModel?.features?.includes(ModelFeatureEnum.vision)
-
+  // change to vision model to set vision enabled, else disabled
+  useEffect(() => {
+    if (!modelChanged)
+      return
+    setModelChanged(false)
+    if (!isShowVisionConfig) {
+      const newInputs = produce(inputs, (draft) => {
+        draft.vision = {
+          enabled: false,
+        }
+      })
+      setInputs(newInputs)
+      return
+    }
+    if (!inputs.vision?.enabled) {
+      const newInputs = produce(inputs, (draft) => {
+        if (!draft.vision?.enabled) {
+          draft.vision = {
+            enabled: true,
+            configs: {
+              detail: Resolution.high,
+            },
+          }
+        }
+      })
+      setInputs(newInputs)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isShowVisionConfig, modelChanged])
   // variables
   const { handleVarListChange, handleAddVariable } = useVarList<LLMNodeType>({
     inputs,
@@ -176,6 +207,46 @@ const useConfig = (id: string, payload: LLMNodeType) => {
     setInputs(newInputs)
   }, [inputs, setInputs])
 
+  const handleSyeQueryChange = useCallback((newQuery: string) => {
+    const newInputs = produce(inputs, (draft) => {
+      if (!draft.memory) {
+        draft.memory = {
+          window: {
+            enabled: false,
+            size: 10,
+          },
+          query_prompt_template: newQuery,
+        }
+      }
+      else {
+        draft.memory.query_prompt_template = newQuery
+      }
+    })
+    setInputs(newInputs)
+  }, [inputs, setInputs])
+
+  const handleVisionResolutionEnabledChange = useCallback((enabled: boolean) => {
+    const newInputs = produce(inputs, (draft) => {
+      if (!draft.vision) {
+        draft.vision = {
+          enabled,
+          configs: {
+            detail: Resolution.high,
+          },
+        }
+      }
+      else {
+        draft.vision.enabled = enabled
+        if (!draft.vision.configs) {
+          draft.vision.configs = {
+            detail: Resolution.high,
+          }
+        }
+      }
+    })
+    setInputs(newInputs)
+  }, [inputs, setInputs])
+
   const handleVisionResolutionChange = useCallback((newResolution: Resolution) => {
     const newInputs = produce(inputs, (draft) => {
       if (!draft.vision.configs) {
@@ -195,6 +266,14 @@ const useConfig = (id: string, payload: LLMNodeType) => {
   const filterVar = useCallback((varPayload: Var) => {
     return [VarType.arrayObject, VarType.array, VarType.string].includes(varPayload.type)
   }, [])
+
+  const {
+    availableVars,
+    availableNodes,
+  } = useAvailableVarList(id, {
+    onlyLeafNodeVar: false,
+    filterVar,
+  })
 
   // single run
   const {
@@ -270,8 +349,10 @@ const useConfig = (id: string, payload: LLMNodeType) => {
 
   const allVarStrArr = (() => {
     const arr = isChatModel ? (inputs.prompt_template as PromptItem[]).map(item => item.text) : [(inputs.prompt_template as PromptItem).text]
-    if (isChatMode && isChatModel && !!inputs.memory)
+    if (isChatMode && isChatModel && !!inputs.memory) {
       arr.push('{{#sys.query#}}')
+      arr.push(inputs.memory.query_prompt_template)
+    }
 
     return arr
   })()
@@ -294,8 +375,12 @@ const useConfig = (id: string, payload: LLMNodeType) => {
     handleContextVarChange,
     filterInputVar,
     filterVar,
+    availableVars,
+    availableNodes,
     handlePromptChange,
     handleMemoryChange,
+    handleSyeQueryChange,
+    handleVisionResolutionEnabledChange,
     handleVisionResolutionChange,
     isShowSingleRun,
     hideSingleRun,

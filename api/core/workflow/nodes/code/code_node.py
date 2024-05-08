@@ -112,7 +112,7 @@ class CodeNode(BaseNode):
             variables[variable] = value
         # Run code
         try:
-            result = CodeExecutor.execute_code(
+            result = CodeExecutor.execute_workflow_code_template(
                 language=code_language,
                 code=code,
                 inputs=variables
@@ -234,6 +234,9 @@ class CodeNode(BaseNode):
         parameters_validated = {}
         for output_name, output_config in output_schema.items():
             dot = '.' if prefix else ''
+            if output_name not in result:
+                raise ValueError(f'Output {prefix}{dot}{output_name} is missing.')
+            
             if output_config.type == 'object':
                 # check if output is object
                 if not isinstance(result.get(output_name), dict):

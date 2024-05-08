@@ -46,6 +46,9 @@ const translation = {
       content: 'The variable is used in other nodes. Do you still want to remove it?',
     },
     insertVarTip: 'Press the \'/\' key to insert quickly',
+    processData: 'Process Data',
+    input: 'Input',
+    output: 'Output',
   },
   errorMsg: {
     fieldRequired: '{{field}} is required',
@@ -201,6 +204,7 @@ const translation = {
       singleRun: {
         variable: 'Variable',
       },
+      sysQueryInUser: 'sys.query in user message is required',
     },
     knowledgeRetrieval: {
       queryVariable: 'Query Variable',

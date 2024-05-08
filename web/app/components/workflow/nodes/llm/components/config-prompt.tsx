@@ -3,14 +3,17 @@ import type { FC } from 'react'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import produce from 'immer'
+import { ReactSortable } from 'react-sortablejs'
+import { v4 as uuid4 } from 'uuid'
+import cn from 'classnames'
 import type { PromptItem, ValueSelector, Var } from '../../../types'
 import { PromptRole } from '../../../types'
 import useAvailableVarList from '../../_base/hooks/use-available-var-list'
+import ConfigPromptItem from './config-prompt-item'
 import Editor from '@/app/components/workflow/nodes/_base/components/prompt/editor'
 import AddButton from '@/app/components/workflow/nodes/_base/components/add-button'
-import TypeSelector from '@/app/components/workflow/nodes/_base/components/selector'
-import TooltipPlus from '@/app/components/base/tooltip-plus'
-import { HelpCircle } from '@/app/components/base/icons/src/vender/line/general'
+import { DragHandle } from '@/app/components/base/icons/src/vender/line/others'
+
 const i18nPrefix = 'workflow.nodes.llm'
 
 type Props = {
@@ -41,6 +44,18 @@ const ConfigPrompt: FC<Props> = ({
   hasSetBlockStatus,
 }) => {
   const { t } = useTranslation()
+  const payloadWithIds = (isChatModel && Array.isArray(payload))
+    ? payload.map((item, i) => {
+      const id = uuid4()
+      return {
+        id: item.id || id,
+        p: {
+          ...item,
+          id: item.id || id,
+        },
+      }
+    })
+    : []
   const {
     availableVars,
     availableNodes,
@@ -58,21 +73,6 @@ const ConfigPrompt: FC<Props> = ({
     }
   }, [onChange, payload])
 
-  const roleOptions = [
-    {
-      label: 'system',
-      value: PromptRole.system,
-    },
-    {
-      label: 'user',
-      value: PromptRole.user,
-    },
-    {
-      label: 'assistant',
-      value: PromptRole.assistant,
-    },
-  ]
-
   const handleChatModeMessageRoleChange = useCallback((index: number) => {
     return (role: PromptRole) => {
       const newPrompt = produce(payload as PromptItem[], (draft) => {
@@ -84,6 +84,11 @@ const ConfigPrompt: FC<Props> = ({
 
   const handleAddPrompt = useCallback(() => {
     const newPrompt = produce(payload as PromptItem[], (draft) => {
+      if (draft.length === 0) {
+        draft.push({ role: PromptRole.system, text: '' })
+
+        return
+      }
       const isLastItemUser = draft[draft.length - 1].role === PromptRole.user
       draft.push({ role: isLastItemUser ? PromptRole.assistant : PromptRole.user, text: '' })
     })
@@ -106,54 +111,69 @@ const ConfigPrompt: FC<Props> = ({
     onChange(newPrompt)
   }, [onChange, payload])
 
-  // console.log(getInputVars((payload as PromptItem).text))
+  const canChooseSystemRole = (() => {
+    if (isChatModel && Array.isArray(payload))
+      return !payload.find(item => item.role === PromptRole.system)
 
+    return false
+  })()
   return (
     <div>
       {(isChatModel && Array.isArray(payload))
         ? (
           <div>
             <div className='space-y-2'>
-              {
-                (payload as PromptItem[]).map((item, index) => {
-                  return (
-                    <Editor
-                      instanceId={`${nodeId}-chat-workflow-llm-prompt-editor-${item.role}-${index}`}
-                      key={index}
-                      title={
-                        <div className='relative left-1 flex items-center'>
-                          <TypeSelector
-                            value={item.role as string}
-                            options={roleOptions}
-                            onChange={handleChatModeMessageRoleChange(index)}
-                            triggerClassName='text-xs font-semibold text-gray-700 uppercase'
-                            itemClassName='text-[13px] font-medium text-gray-700'
-                          />
-                          <TooltipPlus
-                            popupContent={
-                              <div className='max-w-[180px]'>{t(`${i18nPrefix}.roleDescription.${item.role}`)}</div>
-                            }
-                          >
-                            <HelpCircle className='w-3.5 h-3.5 text-gray-400' />
-                          </TooltipPlus>
-                        </div>
-                      }
-                      value={item.text}
-                      onChange={handleChatModePromptChange(index)}
-                      readOnly={readOnly}
-                      showRemove={(payload as PromptItem[]).length > 1}
-                      onRemove={handleRemove(index)}
-                      isChatModel={isChatModel}
-                      isChatApp={isChatApp}
-                      isShowContext={isShowContext}
-                      hasSetBlockStatus={hasSetBlockStatus}
-                      nodesOutputVars={availableVars}
-                      availableNodes={availableNodes}
-                    />
-                  )
-                })
+              <ReactSortable className="space-y-1"
+                list={payloadWithIds}
+                setList={(list) => {
+                  if ((payload as PromptItem[])?.[0].role === PromptRole.system && list[0].p.role !== PromptRole.system)
+                    return
 
-              }
+                  onChange(list.map(item => item.p))
+                }}
+                handle='.handle'
+                ghostClass="opacity-50"
+                animation={150}
+              >
+                {
+                  (payload as PromptItem[]).map((item, index) => {
+                    const canDrag = (() => {
+                      if (readOnly)
+                        return false
+
+                      if (index === 0 && item.role === PromptRole.system)
+                        return false
+
+                      return true
+                    })()
+                    return (
+                      <div key={item.id} className='relative group'>
+                        {canDrag && <DragHandle className='group-hover:block hidden absolute left-[-14px] top-2 w-3.5 h-3.5 text-gray-400' />}
+                        <ConfigPromptItem
+                          className={cn(canDrag && 'handle')}
+                          headerClassName={cn(canDrag && 'cursor-grab')}
+                          canNotChooseSystemRole={!canChooseSystemRole}
+                          canRemove={payload.length > 1 && !(index === 0 && item.role === PromptRole.system)}
+                          readOnly={readOnly}
+                          id={item.id!}
+                          handleChatModeMessageRoleChange={handleChatModeMessageRoleChange(index)}
+                          isChatModel={isChatModel}
+                          isChatApp={isChatApp}
+                          payload={item}
+                          onPromptChange={handleChatModePromptChange(index)}
+                          onRemove={handleRemove(index)}
+                          isShowContext={isShowContext}
+                          hasSetBlockStatus={hasSetBlockStatus}
+                          availableVars={availableVars}
+                          availableNodes={availableNodes}
+                        />
+                      </div>
+
+                    )
+                  })
+
+                }
+              </ReactSortable>
             </div>
             <AddButton
               className='mt-2'

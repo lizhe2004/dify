@@ -46,6 +46,9 @@ const translation = {
       content: '该变量在其他节点中使用。您是否仍要删除它？',
     },
     insertVarTip: '按 \'/\' 键快速插入',
+    processData: '数据处理',
+    input: '输入',
+    output: '输出',
   },
   errorMsg: {
     fieldRequired: '{{field}} 不能为空',
@@ -201,6 +204,7 @@ const translation = {
       singleRun: {
         variable: '变量',
       },
+      sysQueryInUser: 'user message 中必须包含 sys.query',
     },
     knowledgeRetrieval: {
       queryVariable: '查询变量',

@@ -84,13 +84,19 @@ class AdvancedChatAppGenerateTaskPipeline(BasedGenerateTaskPipeline, WorkflowCyc
         """
         super().__init__(application_generate_entity, queue_manager, user, stream)
 
+        if isinstance(self._user, EndUser):
+            user_id = self._user.session_id
+        else:
+            user_id = self._user.id
+
         self._workflow = workflow
         self._conversation = conversation
         self._message = message
         self._workflow_system_variables = {
             SystemVariable.QUERY: message.query,
             SystemVariable.FILES: application_generate_entity.files,
-            SystemVariable.CONVERSATION: conversation.id,
+            SystemVariable.CONVERSATION_ID: conversation.id,
+            SystemVariable.USER_ID: user_id
         }
 
         self._task_state = AdvancedChatTaskState(
@@ -98,6 +104,7 @@ class AdvancedChatAppGenerateTaskPipeline(BasedGenerateTaskPipeline, WorkflowCyc
         )
 
         self._stream_generate_routes = self._get_stream_generate_routes()
+        self._conversation_name_generate_thread = None
 
     def process(self) -> Union[ChatbotAppBlockingResponse, Generator[ChatbotAppStreamResponse, None, None]]:
         """
@@ -107,6 +114,12 @@ class AdvancedChatAppGenerateTaskPipeline(BasedGenerateTaskPipeline, WorkflowCyc
         db.session.refresh(self._workflow)
         db.session.refresh(self._user)
         db.session.close()
+
+        # start generate conversation name thread
+        self._conversation_name_generate_thread = self._generate_conversation_name(
+            self._conversation,
+            self._application_generate_entity.query
+        )
 
         generator = self._process_stream_response()
         if self._stream:
@@ -277,6 +290,9 @@ class AdvancedChatAppGenerateTaskPipeline(BasedGenerateTaskPipeline, WorkflowCyc
                 yield self._ping_stream_response()
             else:
                 continue
+
+        if self._conversation_name_generate_thread:
+            self._conversation_name_generate_thread.join()
 
     def _save_message(self) -> None:
         """

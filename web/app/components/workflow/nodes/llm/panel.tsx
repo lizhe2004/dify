@@ -21,6 +21,7 @@ import ResultPanel from '@/app/components/workflow/run/result-panel'
 import TooltipPlus from '@/app/components/base/tooltip-plus'
 import { HelpCircle } from '@/app/components/base/icons/src/vender/line/general'
 import Editor from '@/app/components/workflow/nodes/_base/components/prompt/editor'
+import Switch from '@/app/components/base/switch'
 const i18nPrefix = 'workflow.nodes.llm'
 
 const Panel: FC<NodePanelProps<LLMNodeType>> = ({
@@ -49,8 +50,12 @@ const Panel: FC<NodePanelProps<LLMNodeType>> = ({
     handleContextVarChange,
     filterInputVar,
     filterVar,
+    availableVars,
+    availableNodes,
     handlePromptChange,
+    handleSyeQueryChange,
     handleMemoryChange,
+    handleVisionResolutionEnabledChange,
     handleVisionResolutionChange,
     isShowSingleRun,
     hideSingleRun,
@@ -202,19 +207,20 @@ const Panel: FC<NodePanelProps<LLMNodeType>> = ({
                     <HelpCircle className='w-3.5 h-3.5 text-gray-400' />
                   </TooltipPlus>
                 </div>}
-                value={'{{#sys.query#}}'}
-                onChange={() => { }}
-                readOnly
+                value={inputs.memory.query_prompt_template || '{{#sys.query#}}'}
+                onChange={handleSyeQueryChange}
+                readOnly={readOnly}
                 isShowContext={false}
                 isChatApp
-                isChatModel={false}
-                hasSetBlockStatus={{
-                  query: false,
-                  history: true,
-                  context: true,
-                }}
-                availableNodes={[startNode!]}
+                isChatModel
+                hasSetBlockStatus={hasSetBlockStatus}
+                nodesOutputVars={availableVars}
+                availableNodes={availableNodes}
               />
+
+              {inputs.memory.query_prompt_template && !inputs.memory.query_prompt_template.includes('{{#sys.query#}}') && (
+                <div className='leading-[18px] text-xs font-normal text-[#DC6803]'>{t(`${i18nPrefix}.sysQueryInUser`)}</div>
+              )}
             </div>
           </div>
         )}
@@ -240,12 +246,19 @@ const Panel: FC<NodePanelProps<LLMNodeType>> = ({
               title={t(`${i18nPrefix}.vision`)}
               tooltip={t('appDebug.vision.description')!}
               operations={
-                <ResolutionPicker
-                  value={inputs.vision.configs?.detail || Resolution.high}
-                  onChange={handleVisionResolutionChange}
-                />
+                <Switch size='md' defaultValue={inputs.vision.enabled} onChange={handleVisionResolutionEnabledChange} />
               }
-            />
+            >
+              {inputs.vision.enabled
+                ? (
+                  <ResolutionPicker
+                    value={inputs.vision.configs?.detail || Resolution.high}
+                    onChange={handleVisionResolutionChange}
+                  />
+                )
+                : null}
+
+            </Field>
           </>
         )}
       </div>
