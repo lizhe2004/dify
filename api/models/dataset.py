@@ -15,15 +15,15 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from configs import dify_config
 from core.rag.retrieval.retrieval_methods import RetrievalMethod
-from extensions.ext_database import db
 from extensions.ext_storage import storage
 
 from .account import Account
+from .engine import db
 from .model import App, Tag, TagBinding, UploadFile
 from .types import StringUUID
 
 
-class DatasetPermissionEnum(str, enum.Enum):
+class DatasetPermissionEnum(enum.StrEnum):
     ONLY_ME = "only_me"
     ALL_TEAM = "all_team_members"
     PARTIAL_TEAM = "partial_members"
