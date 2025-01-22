@@ -12,9 +12,11 @@ const translation = {
     permissions: '権限',
     permissionsOnlyMe: '自分のみ',
     permissionsAllMember: 'すべてのチームメンバー',
+    permissionsInvitedMembers: '一部のチームメンバー',
+    me: '(あなた様)',
     indexMethod: 'インデックス方法',
     indexMethodHighQuality: '高品質',
-    indexMethodHighQualityTip: 'ユーザーのクエリ時により高い精度を提供するために、OpenAIの埋め込みインターフェースを呼び出して処理します。',
+    indexMethodHighQualityTip: 'ユーザーがクエリを実行する際により高い精度を提供するために、Embeddingモデルを呼び出して処理を行う。',
     indexMethodEconomy: '経済的',
     indexMethodEconomyTip: 'オフラインのベクトルエンジン、キーワードインデックスなどを使用して精度を低下させることなく、トークンを消費せずに処理します。',
     embeddingModel: '埋め込みモデル',
@@ -22,11 +24,14 @@ const translation = {
     embeddingModelTipLink: '設定',
     retrievalSetting: {
       title: '検索設定',
-      learnMore: '詳細を学ぶ',
+      learnMore: '詳細を見る',
       description: ' 検索方法についての詳細',
       longDescription: ' 検索方法についての詳細については、いつでもナレッジの設定で変更できます。',
     },
     save: '保存',
+    externalKnowledgeID: '外部ナレッジID',
+    retrievalSettings: '取得設定',
+    externalKnowledgeAPI: '外部ナレッジAPI',
   },
 }
 

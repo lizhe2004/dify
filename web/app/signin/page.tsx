@@ -1,21 +1,13 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import cn from 'classnames'
-import Script from 'next/script'
-import Loading from '../components/base/loading'
-import Forms from './forms'
-import Header from './_header'
-import style from './page.module.css'
-import EnterpriseSSOForm from './enterpriseSSOForm'
-import { IS_CE_EDITION } from '@/config'
-import { getEnterpriseFeatures } from '@/service/enterprise'
-import type { EnterpriseFeatures } from '@/types/enterprise'
-import { defaultEnterpriseFeatures } from '@/types/enterprise'
+import { useSearchParams } from 'next/navigation'
+import OneMoreStep from './oneMoreStep'
+import NormalForm from './normalForm'
 
 const SignIn = () => {
-  const [loading, setLoading] = useState<boolean>(true)
-  const [enterpriseFeatures, setEnterpriseFeatures] = useState<EnterpriseFeatures>(defaultEnterpriseFeatures)
+  const searchParams = useSearchParams()
+  const step = searchParams.get('step')
 
+<<<<<<< HEAD
   useEffect(() => {
     getEnterpriseFeatures().then((res) => {
       setEnterpriseFeatures(res)
@@ -88,6 +80,11 @@ gtag('config', 'AW-11217955271"');
 
     </>
   )
+=======
+  if (step === 'next')
+    return <OneMoreStep />
+  return <NormalForm />
+>>>>>>> 8b16f07eb0df69d42a5eed47ebcf1e9ef982a881
 }
 
 export default SignIn

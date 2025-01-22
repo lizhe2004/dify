@@ -72,7 +72,7 @@ export type I18nText = {
 }
 ```
 
-4. Add the new language to the `language.ts` file.
+4. Add the new language to the `language.json` file.
 
 ```typescript
 
@@ -123,7 +123,7 @@ export const languages = [
     value: 'ko-KR',
     name: '한국어(대한민국)',
     example: '안녕, Dify!',
-    supported: false,
+    supported: true,
   },
   {
     value: 'ru-RU',

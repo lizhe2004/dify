@@ -1,11 +1,13 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import produce from 'immer'
 import { useBoolean } from 'ahooks'
 import useVarList from '../_base/hooks/use-var-list'
 import { VarType } from '../../types'
 import type { Var } from '../../types'
-import type { Authorization, Body, HttpNodeType, Method } from './types'
+import { useStore } from '../../store'
+import { type Authorization, type Body, BodyType, type HttpNodeType, type Method, type Timeout } from './types'
 import useKeyValueList from './hooks/use-key-value-list'
+import { transformToBodyPayload } from './utils'
 import useNodeCrud from '@/app/components/workflow/nodes/_base/hooks/use-node-crud'
 import useOneStepRun from '@/app/components/workflow/nodes/_base/hooks/use-one-step-run'
 import {
@@ -14,12 +16,34 @@ import {
 
 const useConfig = (id: string, payload: HttpNodeType) => {
   const { nodesReadOnly: readOnly } = useNodesReadOnly()
+
+  const defaultConfig = useStore(s => s.nodesDefaultConfigs)[payload.type]
+
   const { inputs, setInputs } = useNodeCrud<HttpNodeType>(id, payload)
 
   const { handleVarListChange, handleAddVariable } = useVarList<HttpNodeType>({
     inputs,
     setInputs,
   })
+
+  const [isDataReady, setIsDataReady] = useState(false)
+
+  useEffect(() => {
+    const isReady = defaultConfig && Object.keys(defaultConfig).length > 0
+    if (isReady) {
+      const newInputs = {
+        ...defaultConfig,
+        ...inputs,
+      }
+      const bodyData = newInputs.body.data
+      if (typeof bodyData === 'string')
+        newInputs.body.data = transformToBodyPayload(bodyData, [BodyType.formData, BodyType.xWwwFormUrlencoded].includes(newInputs.body.type))
+
+      setInputs(newInputs)
+      setIsDataReady(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultConfig])
 
   const handleMethodChange = useCallback((method: Method) => {
     const newInputs = produce(inputs, (draft: HttpNodeType) => {
@@ -80,8 +104,15 @@ const useConfig = (id: string, payload: HttpNodeType) => {
     setInputs(newInputs)
   }, [inputs, setInputs])
 
+  const setTimeout = useCallback((timeout: Timeout) => {
+    const newInputs = produce(inputs, (draft: HttpNodeType) => {
+      draft.timeout = timeout
+    })
+    setInputs(newInputs)
+  }, [inputs, setInputs])
+
   const filterVar = useCallback((varPayload: Var) => {
-    return [VarType.string, VarType.number].includes(varPayload.type)
+    return [VarType.string, VarType.number, VarType.secret].includes(varPayload.type)
   }, [])
 
   // single run
@@ -101,11 +132,23 @@ const useConfig = (id: string, payload: HttpNodeType) => {
     defaultRunInputData: {},
   })
 
+  const fileVarInputs = useMemo(() => {
+    if (!Array.isArray(inputs.body.data))
+      return ''
+
+    const res = inputs.body.data
+      .filter(item => item.file?.length)
+      .map(item => item.file ? `{{#${item.file.join('.')}#}}` : '')
+      .join(' ')
+    return res
+  }, [inputs.body.data])
+
   const varInputs = getInputVars([
     inputs.url,
     inputs.headers,
     inputs.params,
-    inputs.body.data,
+    typeof inputs.body.data === 'string' ? inputs.body.data : inputs.body.data.map(item => item.value).join(''),
+    fileVarInputs,
   ])
 
   const inputVarValues = (() => {
@@ -121,8 +164,26 @@ const useConfig = (id: string, payload: HttpNodeType) => {
     setRunInputData(newPayload)
   }, [setRunInputData])
 
+  // curl import panel
+  const [isShowCurlPanel, {
+    setTrue: showCurlPanel,
+    setFalse: hideCurlPanel,
+  }] = useBoolean(false)
+
+  const handleCurlImport = useCallback((newNode: HttpNodeType) => {
+    const newInputs = produce(inputs, (draft: HttpNodeType) => {
+      draft.method = newNode.method
+      draft.url = newNode.url
+      draft.headers = newNode.headers
+      draft.params = newNode.params
+      draft.body = newNode.body
+    })
+    setInputs(newInputs)
+  }, [inputs, setInputs])
+
   return {
     readOnly,
+    isDataReady,
     inputs,
     handleVarListChange,
     handleAddVariable,
@@ -148,6 +209,7 @@ const useConfig = (id: string, payload: HttpNodeType) => {
     showAuthorization,
     hideAuthorization,
     setAuthorization,
+    setTimeout,
     // single run
     isShowSingleRun,
     hideSingleRun,
@@ -158,6 +220,11 @@ const useConfig = (id: string, payload: HttpNodeType) => {
     inputVarValues,
     setInputVarValues,
     runResult,
+    // curl import
+    isShowCurlPanel,
+    showCurlPanel,
+    hideCurlPanel,
+    handleCurlImport,
   }
 }
 

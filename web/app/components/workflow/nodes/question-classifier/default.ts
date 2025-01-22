@@ -26,6 +26,9 @@ const nodeDefault: NodeDefault<QuestionClassifierNodeType> = {
         name: '',
       },
     ],
+    vision: {
+      enabled: false,
+    },
   },
   getAvailablePrevNodes(isChatMode: boolean) {
     const nodes = isChatMode
@@ -35,7 +38,7 @@ const nodeDefault: NodeDefault<QuestionClassifierNodeType> = {
   },
   getAvailableNextNodes(isChatMode: boolean) {
     const nodes = isChatMode ? ALL_CHAT_AVAILABLE_BLOCKS : ALL_COMPLETION_AVAILABLE_BLOCKS
-    return nodes.filter(type => type !== BlockEnum.VariableAssigner)
+    return nodes
   },
   checkValid(payload: QuestionClassifierNodeType, t: any) {
     let errorMessages = ''
@@ -50,6 +53,9 @@ const nodeDefault: NodeDefault<QuestionClassifierNodeType> = {
 
     if (!errorMessages && (payload.classes.some(item => !item.name)))
       errorMessages = t(`${i18nPrefix}.errorMsg.fieldRequired`, { field: t(`${i18nPrefix}.nodes.questionClassifiers.topicName`) })
+
+    if (!errorMessages && payload.vision?.enabled && !payload.vision.configs?.variable_selector?.length)
+      errorMessages = t(`${i18nPrefix}.errorMsg.fieldRequired`, { field: t(`${i18nPrefix}.errorMsg.fields.visionVariable`) })
     return {
       isValid: !errorMessages,
       errorMessage: errorMessages,

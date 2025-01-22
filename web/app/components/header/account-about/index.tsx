@@ -1,10 +1,11 @@
 'use client'
 import { useTranslation } from 'react-i18next'
-import classNames from 'classnames'
 import Link from 'next/link'
+import dayjs from 'dayjs'
+import { RiCloseLine } from '@remixicon/react'
 import s from './index.module.css'
+import classNames from '@/utils/classnames'
 import Modal from '@/app/components/base/modal'
-import { XClose } from '@/app/components/base/icons/src/vender/line/general'
 import type { LangGeniusVersionResponse } from '@/models/common'
 import { IS_CE_EDITION } from '@/config'
 import LogoSite from '@/app/components/base/logo/logo-site'
@@ -32,19 +33,23 @@ export default function AccountAbout({
     >
       <div className='relative pt-4'>
         <div className='absolute -top-2 -right-4 flex justify-center items-center w-8 h-8 cursor-pointer' onClick={onCancel}>
-          <XClose className='w-4 h-4 text-gray-500' />
+          <RiCloseLine className='w-4 h-4 text-gray-500' />
         </div>
         <div>
           <LogoSite className='mx-auto mb-2' />
           <div className='mb-3 text-center text-xs font-normal text-gray-500'>Version {langeniusVersionInfo?.current_version}</div>
           <div className='mb-4 text-center text-xs font-normal text-gray-700'>
+<<<<<<< HEAD
             <div>© 2023 小兔科技.</div>
+=======
+            <div>© {dayjs().year()} LangGenius, Inc., Contributors.</div>
+>>>>>>> 8b16f07eb0df69d42a5eed47ebcf1e9ef982a881
             <div className='text-[#1C64F2]'>
               {
                 IS_CE_EDITION
                   ? <Link href={'https://github.com/langgenius/dify/blob/main/LICENSE'} target='_blank' rel='noopener noreferrer'>Open Source License</Link>
                   : <>
-                    <Link href='https://dify.ai/privacy' target='_blank' rel='noopener noreferrer'>Privacy Policy</Link>,
+                    <Link href='https://dify.ai/privacy' target='_blank' rel='noopener noreferrer'>Privacy Policy</Link>,<span> </span>
                     <Link href='https://dify.ai/terms' target='_blank' rel='noopener noreferrer'>Terms of Service</Link>
                   </>
               }

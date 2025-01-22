@@ -3,13 +3,18 @@ import { memo } from 'react'
 import { BlockEnum } from './types'
 import {
   Answer,
+  Assigner,
   Code,
+  DocsExtractor,
   End,
   Home,
   Http,
   IfElse,
+  Iteration,
   KnowledgeRetrieval,
+  ListFilter,
   Llm,
+  ParameterExtractor,
   QuestionClassifier,
   TemplatingTransform,
   VariableX,
@@ -40,21 +45,33 @@ const getIcon = (type: BlockEnum, className: string) => {
     [BlockEnum.QuestionClassifier]: <QuestionClassifier className={className} />,
     [BlockEnum.TemplateTransform]: <TemplatingTransform className={className} />,
     [BlockEnum.VariableAssigner]: <VariableX className={className} />,
+    [BlockEnum.VariableAggregator]: <VariableX className={className} />,
+    [BlockEnum.Assigner]: <Assigner className={className} />,
     [BlockEnum.Tool]: <VariableX className={className} />,
+    [BlockEnum.Iteration]: <Iteration className={className} />,
+    [BlockEnum.ParameterExtractor]: <ParameterExtractor className={className} />,
+    [BlockEnum.DocExtractor]: <DocsExtractor className={className} />,
+    [BlockEnum.ListFilter]: <ListFilter className={className} />,
   }[type]
 }
 const ICON_CONTAINER_BG_COLOR_MAP: Record<string, string> = {
-  [BlockEnum.Start]: 'bg-primary-500',
-  [BlockEnum.LLM]: 'bg-[#6172F3]',
-  [BlockEnum.Code]: 'bg-[#2E90FA]',
-  [BlockEnum.End]: 'bg-[#F79009]',
-  [BlockEnum.IfElse]: 'bg-[#06AED4]',
-  [BlockEnum.HttpRequest]: 'bg-[#875BF7]',
-  [BlockEnum.Answer]: 'bg-[#F79009]',
-  [BlockEnum.KnowledgeRetrieval]: 'bg-[#16B364]',
-  [BlockEnum.QuestionClassifier]: 'bg-[#16B364]',
-  [BlockEnum.TemplateTransform]: 'bg-[#2E90FA]',
-  [BlockEnum.VariableAssigner]: 'bg-[#2E90FA]',
+  [BlockEnum.Start]: 'bg-util-colors-blue-brand-blue-brand-500',
+  [BlockEnum.LLM]: 'bg-util-colors-indigo-indigo-500',
+  [BlockEnum.Code]: 'bg-util-colors-blue-blue-500',
+  [BlockEnum.End]: 'bg-util-colors-warning-warning-500',
+  [BlockEnum.IfElse]: 'bg-util-colors-cyan-cyan-500',
+  [BlockEnum.Iteration]: 'bg-util-colors-cyan-cyan-500',
+  [BlockEnum.HttpRequest]: 'bg-util-colors-violet-violet-500',
+  [BlockEnum.Answer]: 'bg-util-colors-warning-warning-500',
+  [BlockEnum.KnowledgeRetrieval]: 'bg-util-colors-green-green-500',
+  [BlockEnum.QuestionClassifier]: 'bg-util-colors-green-green-500',
+  [BlockEnum.TemplateTransform]: 'bg-util-colors-blue-blue-500',
+  [BlockEnum.VariableAssigner]: 'bg-util-colors-blue-blue-500',
+  [BlockEnum.VariableAggregator]: 'bg-util-colors-blue-blue-500',
+  [BlockEnum.Assigner]: 'bg-util-colors-blue-blue-500',
+  [BlockEnum.ParameterExtractor]: 'bg-util-colors-blue-blue-500',
+  [BlockEnum.DocExtractor]: 'bg-util-colors-green-green-500',
+  [BlockEnum.ListFilter]: 'bg-util-colors-cyan-cyan-500',
 }
 const BlockIcon: FC<BlockIconProps> = ({
   type,
@@ -64,8 +81,8 @@ const BlockIcon: FC<BlockIconProps> = ({
 }) => {
   return (
     <div className={`
-      flex items-center justify-center border-[0.5px] border-white/[0.02] text-white
-      ${ICON_CONTAINER_CLASSNAME_SIZE_MAP[size]} 
+      flex items-center justify-center border-[0.5px] border-white/2 text-white
+      ${ICON_CONTAINER_CLASSNAME_SIZE_MAP[size]}
       ${ICON_CONTAINER_BG_COLOR_MAP[type]}
       ${toolIcon && '!shadow-none'}
       ${className}

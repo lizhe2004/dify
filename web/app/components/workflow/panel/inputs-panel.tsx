@@ -1,5 +1,6 @@
 import {
   memo,
+  useCallback,
   useMemo,
 } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -19,6 +20,10 @@ import type { StartNodeType } from '../nodes/start/types'
 import { TransferMethod } from '../../base/text-generation/types'
 import Button from '@/app/components/base/button'
 import { useFeatures } from '@/app/components/base/features/hooks'
+import {
+  getProcessedInputs,
+} from '@/app/components/base/chat/chat/utils'
+import { useCheckInputsForms } from '@/app/components/base/chat/chat/check-input-forms-hooks'
 
 type Props = {
   onRun: () => void
@@ -34,10 +39,10 @@ const InputsPanel = ({ onRun }: Props) => {
   const workflowRunningData = useStore(s => s.workflowRunningData)
   const {
     handleRun,
-    handleRunSetting,
   } = useWorkflowRun()
   const startNode = nodes.find(node => node.data.type === BlockEnum.Start)
   const startVariables = startNode?.data.variables
+  const { checkInputsForm } = useCheckInputsForms()
 
   const variables = useMemo(() => {
     const data = startVariables || []
@@ -47,7 +52,7 @@ const InputsPanel = ({ onRun }: Props) => {
         {
           type: InputVarType.files,
           variable: '__image',
-          required: true,
+          required: false,
           label: 'files',
         },
       ]
@@ -57,42 +62,48 @@ const InputsPanel = ({ onRun }: Props) => {
   }, [fileSettings?.image?.enabled, startVariables])
 
   const handleValueChange = (variable: string, v: any) => {
+    const {
+      inputs,
+      setInputs,
+    } = workflowStore.getState()
     if (variable === '__image') {
       workflowStore.setState({
         files: v,
       })
     }
     else {
-      workflowStore.getState().setInputs({
+      setInputs({
         ...inputs,
         [variable]: v,
       })
     }
   }
 
-  const doRun = () => {
+  const doRun = useCallback(() => {
+    if (!checkInputsForm(inputs, variables as any))
+      return
     onRun()
-    handleRunSetting()
-    handleRun({ inputs, files })
-  }
+    handleRun({ inputs: getProcessedInputs(inputs, variables as any), files })
+  }, [files, handleRun, inputs, onRun, variables, checkInputsForm])
 
-  const canRun = (() => {
+  const canRun = useMemo(() => {
     if (files?.some(item => (item.transfer_method as any) === TransferMethod.local_file && !item.upload_file_id))
       return false
 
     return true
-  })()
+  }, [files])
 
   return (
     <>
-      <div className='px-4 pb-2'>
+      <div className='pt-3 px-4 pb-2'>
         {
-          variables.map(variable => (
+          variables.map((variable, index) => (
             <div
               key={variable.variable}
               className='mb-2 last-of-type:mb-0'
             >
               <FormItem
+                autoFocus={index === 0}
                 className='!block'
                 payload={variable}
                 value={inputs[variable.variable]}
@@ -104,9 +115,9 @@ const InputsPanel = ({ onRun }: Props) => {
       </div>
       <div className='flex items-center justify-between px-4 py-2'>
         <Button
-          type='primary'
+          variant='primary'
           disabled={!canRun || workflowRunningData?.result?.status === WorkflowRunningStatus.Running}
-          className='py-0 w-full h-8 rounded-lg text-[13px] font-medium'
+          className='w-full'
           onClick={doRun}
         >
           {t('workflow.singleRun.startRun')}

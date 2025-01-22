@@ -1,6 +1,7 @@
 import { BlockEnum } from '../../types'
 import type { NodeDefault } from '../../types'
-import { AuthorizationType, BodyType, type HttpNodeType, Method } from './types'
+import { AuthorizationType, BodyType, Method } from './types'
+import type { BodyPayload, HttpNodeType } from './types'
 import { ALL_CHAT_AVAILABLE_BLOCKS, ALL_COMPLETION_AVAILABLE_BLOCKS } from '@/app/components/workflow/constants'
 
 const nodeDefault: NodeDefault<HttpNodeType> = {
@@ -16,7 +17,12 @@ const nodeDefault: NodeDefault<HttpNodeType> = {
     params: '',
     body: {
       type: BodyType.none,
-      data: '',
+      data: [],
+    },
+    timeout: {
+      max_connect_timeout: 0,
+      max_read_timeout: 0,
+      max_write_timeout: 0,
     },
   },
   getAvailablePrevNodes(isChatMode: boolean) {
@@ -35,8 +41,11 @@ const nodeDefault: NodeDefault<HttpNodeType> = {
     if (!errorMessages && !payload.url)
       errorMessages = t('workflow.errorMsg.fieldRequired', { field: t('workflow.nodes.http.api') })
 
-    if (!errorMessages && !payload.url.startsWith('http://') && !payload.url.startsWith('https://'))
-      errorMessages = t('workflow.nodes.http.notStartWithHttp')
+    if (!errorMessages
+        && payload.body.type === BodyType.binary
+        && ((!(payload.body.data as BodyPayload)[0]?.file) || (payload.body.data as BodyPayload)[0]?.file?.length === 0)
+    )
+      errorMessages = t('workflow.errorMsg.fieldRequired', { field: t('workflow.nodes.http.binaryFileVariable') })
 
     return {
       isValid: !errorMessages,
