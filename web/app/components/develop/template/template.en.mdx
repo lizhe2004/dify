@@ -346,6 +346,9 @@ The text generation application offers non-session support and is ideal for tran
       <Property name='user' type='string' key='user'>
         User identifier, defined by the developer's rules, must be unique within the application.
       </Property>
+      <Property name='content' type='string' key='content'>
+        The specific content of message feedback.
+      </Property>
     </Properties>
 
     ### Response
@@ -353,7 +356,7 @@ The text generation application offers non-session support and is ideal for tran
   </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="POST" label="/messages/:message_id/feedbacks" targetCode={`curl -X POST '${props.appDetail.api_base_url}/messages/:message_id/feedbacks \\\n --header 'Authorization: Bearer {api_key}' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n    "rating": "like",\n    "user": "abc-123"\n}'`}>
+    <CodeGroup title="Request" tag="POST" label="/messages/:message_id/feedbacks" targetCode={`curl -X POST '${props.appDetail.api_base_url}/messages/:message_id/feedbacks \\\n --header 'Authorization: Bearer {api_key}' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n    "rating": "like",\n    "user": "abc-123",\n    "content": "message feedback information"\n}'`}>
 
     ```bash {{ title: 'cURL' }}
     curl -X POST '${props.appDetail.api_base_url}/messages/:message_id/feedbacks' \
@@ -361,7 +364,8 @@ The text generation application offers non-session support and is ideal for tran
     --header 'Content-Type: application/json' \
     --data-raw '{
         "rating": "like",
-        "user": "abc-123"
+        "user": "abc-123",
+        "content": "message feedback information"
     }'
     ```
 
@@ -371,127 +375,6 @@ The text generation application offers non-session support and is ideal for tran
     ```json {{ title: 'Response' }}
     {
       "result": "success"
-    }
-    ```
-    </CodeGroup>
-  </Col>
-</Row>
-
----
-
-<Heading
-  url='/parameters'
-  method='GET'
-  title='Get Application Information'
-  name='#parameters'
-/>
-<Row>
-  <Col>
-    Used at the start of entering the page to obtain information such as features, input parameter names, types, and default values.
-
-    ### Query
-
-    <Properties>
-      <Property name='user' type='string' key='user'>
-          User identifier, defined by the developer's rules, must be unique within the application.
-      </Property>
-    </Properties>
-
-    ### Response
-    - `opening_statement` (string) Opening statement
-    - `suggested_questions` (array[string]) List of suggested questions for the opening
-    - `suggested_questions_after_answer` (object) Suggest questions after enabling the answer.
-      - `enabled` (bool) Whether it is enabled
-    - `speech_to_text` (object) Speech to text
-      - `enabled` (bool) Whether it is enabled
-    - `retriever_resource` (object) Citation and Attribution
-      - `enabled` (bool) Whether it is enabled
-    - `annotation_reply` (object) Annotation reply
-      - `enabled` (bool) Whether it is enabled
-    - `user_input_form` (array[object]) User input form configuration
-      - `text-input` (object) Text input control
-        - `label` (string) Variable display label name
-        - `variable` (string) Variable ID
-        - `required` (bool) Whether it is required
-        - `default` (string) Default value
-      - `paragraph` (object) Paragraph text input control
-        - `label` (string) Variable display label name
-        - `variable` (string) Variable ID
-        - `required` (bool) Whether it is required
-        - `default` (string) Default value
-      - `select` (object) Dropdown control
-        - `label` (string) Variable display label name
-        - `variable` (string) Variable ID
-        - `required` (bool) Whether it is required
-        - `default` (string) Default value
-        - `options` (array[string]) Option values
-    - `file_upload` (object) File upload configuration
-      - `image` (object) Image settings
-        Currently only supports image types: `png`, `jpg`, `jpeg`, `webp`, `gif`
-        - `enabled` (bool) Whether it is enabled
-        - `number_limits` (int) Image number limit, default is 3
-        - `transfer_methods` (array[string]) List of transfer methods, remote_url, local_file, must choose one
-    - `system_parameters` (object) System parameters
-      - `file_size_limit` (int) Document upload size limit (MB)
-      - `image_file_size_limit` (int) Image file upload size limit (MB)
-      - `audio_file_size_limit` (int) Audio file upload size limit (MB)
-      - `video_file_size_limit` (int) Video file upload size limit (MB)
-
-  </Col>
-  <Col sticky>
-
-    <CodeGroup title="Request" tag="GET" label="/parameters" targetCode={` curl -X GET '${props.appDetail.api_base_url}/parameters?user=abc-123'`}>
-
-    ```bash {{ title: 'cURL' }}
-    curl -X GET '${props.appDetail.api_base_url}/parameters?user=abc-123' \
-    --header 'Authorization: Bearer {api_key}'
-    ```
-
-    </CodeGroup>
-
-    <CodeGroup title="Response">
-    ```json {{ title: 'Response' }}
-    {
-      "opening_statement": "Hello!",
-      "suggested_questions_after_answer": {
-          "enabled": true
-      },
-      "speech_to_text": {
-          "enabled": true
-      },
-      "retriever_resource": {
-          "enabled": true
-      },
-      "annotation_reply": {
-          "enabled": true
-      },
-      "user_input_form": [
-          {
-              "paragraph": {
-                  "label": "Query",
-                  "variable": "query",
-                  "required": true,
-                  "default": ""
-              }
-          }
-      ],
-      "file_upload": {
-          "image": {
-              "enabled": false,
-              "number_limits": 3,
-              "detail": "high",
-              "transfer_methods": [
-                  "remote_url",
-                  "local_file"
-              ]
-          }
-      },
-      "system_parameters": {
-          "file_size_limit": 15,
-          "image_file_size_limit": 10,
-          "audio_file_size_limit": 50,
-          "video_file_size_limit": 100
-      }
     }
     ```
     </CodeGroup>
@@ -545,6 +428,157 @@ The text generation application offers non-session support and is ideal for tran
     ```json {{ title: 'headers' }}
     {
       "Content-Type": "audio/wav"
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+---
+
+<Heading
+  url='/info'
+  method='GET'
+  title='Get Application Basic Information'
+  name='#info'
+/>
+<Row>
+  <Col>
+  Used to get basic information about this application
+
+  ### Response
+  - `name` (string) application name
+  - `description` (string) application description
+  - `tags` (array[string]) application tags
+  </Col>
+  <Col>
+    <CodeGroup title="Request" tag="GET" label="/info" targetCode={`curl -X GET '${props.appDetail.api_base_url}/info' \\\n-H 'Authorization: Bearer {api_key}'`}>
+      ```bash {{ title: 'cURL' }}
+      curl -X GET '${props.appDetail.api_base_url}/info' \
+      -H 'Authorization: Bearer {api_key}'
+      ```
+    </CodeGroup>
+    <CodeGroup title="Response">
+    ```json {{ title: 'Response' }}
+    {
+      "name": "My App",
+      "description": "This is my app.",
+      "tags": [
+        "tag1",
+        "tag2"
+      ]
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+<Heading
+  url='/parameters'
+  method='GET'
+  title='Get Application Parameters Information'
+  name='#parameters'
+/>
+<Row>
+  <Col>
+    Used at the start of entering the page to obtain information such as features, input parameter names, types, and default values.
+
+    ### Response
+    - `opening_statement` (string) Opening statement
+    - `suggested_questions` (array[string]) List of suggested questions for the opening
+    - `suggested_questions_after_answer` (object) Suggest questions after enabling the answer.
+      - `enabled` (bool) Whether it is enabled
+    - `speech_to_text` (object) Speech to text
+      - `enabled` (bool) Whether it is enabled
+    - `retriever_resource` (object) Citation and Attribution
+      - `enabled` (bool) Whether it is enabled
+    - `annotation_reply` (object) Annotation reply
+      - `enabled` (bool) Whether it is enabled
+    - `user_input_form` (array[object]) User input form configuration
+      - `text-input` (object) Text input control
+        - `label` (string) Variable display label name
+        - `variable` (string) Variable ID
+        - `required` (bool) Whether it is required
+        - `default` (string) Default value
+      - `paragraph` (object) Paragraph text input control
+        - `label` (string) Variable display label name
+        - `variable` (string) Variable ID
+        - `required` (bool) Whether it is required
+        - `default` (string) Default value
+      - `select` (object) Dropdown control
+        - `label` (string) Variable display label name
+        - `variable` (string) Variable ID
+        - `required` (bool) Whether it is required
+        - `default` (string) Default value
+        - `options` (array[string]) Option values
+    - `file_upload` (object) File upload configuration
+      - `image` (object) Image settings
+        Currently only supports image types: `png`, `jpg`, `jpeg`, `webp`, `gif`
+        - `enabled` (bool) Whether it is enabled
+        - `number_limits` (int) Image number limit, default is 3
+        - `transfer_methods` (array[string]) List of transfer methods, remote_url, local_file, must choose one
+    - `system_parameters` (object) System parameters
+      - `file_size_limit` (int) Document upload size limit (MB)
+      - `image_file_size_limit` (int) Image file upload size limit (MB)
+      - `audio_file_size_limit` (int) Audio file upload size limit (MB)
+      - `video_file_size_limit` (int) Video file upload size limit (MB)
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/parameters" targetCode={` curl -X GET '${props.appDetail.api_base_url}/parameters'`}>
+
+    ```bash {{ title: 'cURL' }}
+    curl -X GET '${props.appDetail.api_base_url}/parameters' \
+    --header 'Authorization: Bearer {api_key}'
+    ```
+
+    </CodeGroup>
+
+    <CodeGroup title="Response">
+    ```json {{ title: 'Response' }}
+    {
+      "opening_statement": "Hello!",
+      "suggested_questions_after_answer": {
+          "enabled": true
+      },
+      "speech_to_text": {
+          "enabled": true
+      },
+      "retriever_resource": {
+          "enabled": true
+      },
+      "annotation_reply": {
+          "enabled": true
+      },
+      "user_input_form": [
+          {
+              "paragraph": {
+                  "label": "Query",
+                  "variable": "query",
+                  "required": true,
+                  "default": ""
+              }
+          }
+      ],
+      "file_upload": {
+          "image": {
+              "enabled": false,
+              "number_limits": 3,
+              "detail": "high",
+              "transfer_methods": [
+                  "remote_url",
+                  "local_file"
+              ]
+          }
+      },
+      "system_parameters": {
+          "file_size_limit": 15,
+          "image_file_size_limit": 10,
+          "audio_file_size_limit": 50,
+          "video_file_size_limit": 100
+      }
     }
     ```
     </CodeGroup>
